@@ -137,7 +137,7 @@ function addEntity(entity, data) {
     to_send = {}
     to_send[entity] = data
     console.log(to_send)
-    socket.send(JSON.stringify(data))
+    socket.send(JSON.stringify(to_send))
     //XXX: Send a XHTML Request that updates the entity you just modified!
 }
 var counter = 0;
