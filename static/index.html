@@ -124,6 +124,17 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
+    // fetch("/entity/" + entity, {
+    //     method: "POST",
+    //     headers: {
+    //         "Content-Type": "application/json",
+    //         "Accept": "application/json"
+    //     },
+    //     body: JSON.stringify(data)
+    //  });
+    to_send = {}
+    to_send[entity] = data
+    socket.send(JSON.stringify(to_send))
     //XXX: Send a XHTML Request that updates the entity you just modified!
 }
 var counter = 0;
@@ -254,6 +265,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        // Aren't sockets always open by default?
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,7 +273,14 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?  
+            
+            let message = JSON.parse(msg.data)    
+            // update world
+            for (let entity in message) {
+                world[entity] = message[entity]
+            }
+            drawNextFrame()
         } catch (e) {
             alert("socket on message: " + e);
         }

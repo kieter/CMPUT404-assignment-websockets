@@ -59,3 +59,14 @@ Contributors
 * Mark Galloway
 * Abram Hindle
 * Cole Mackenzie
+
+Kieter's solution was made in contribution with
+============
+
+* Gary Dhillon
+* Michael Paradis
+* Owen McLeod
+
+and with reference to:
+
+* https://github.com/abramhindle/WebSocketsExamples

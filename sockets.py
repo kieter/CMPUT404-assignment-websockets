@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 import flask
-from flask import Flask, request
+from flask import Flask, request, redirect
 from flask_sockets import Sockets
 import gevent
 from gevent import queue
@@ -26,6 +26,8 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
+# from here
+# https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
 def send_all(message):
     for client in clients:
         client.put(message)
@@ -39,8 +41,6 @@ class Client:
         self.queue.put_nowait(v)
     def get(self):
         return self.queue.get()
-
-clients = []
 
 class World:
     def __init__(self):
@@ -75,10 +75,13 @@ class World:
     def world(self):
         return self.space
 
+clients = []
 myWorld = World()        
 
 def set_listener( entity, data ):
     ''' do something with the update ! '''
+    for client in clients:
+        client.put(json.dumps({entity:data}))
 
 myWorld.add_set_listener( set_listener )
 
@@ -87,24 +90,26 @@ myWorld.add_set_listener( set_listener )
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return redirect("/static/index.html")
 
 def read_ws(ws,client):
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
+    # from here:
+    # https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
     try:
         while True:
             message = ws.receive()
             print("WS RECV: %s" % message)
             if (message is not None):
                 packet = json.loads(message)
-                send_all_json( packet )
+                for entity in packet:
+                    myWorld.set(entity, packet[entity])
             else:
                 break
-    except:
+    except Exception as e:
+        print(e)
         '''Done'''
-
-    return None
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
@@ -112,10 +117,13 @@ def subscribe_socket(ws):
        websocket and read updates from the websocket '''
        
     # XXX: TODO IMPLEMENT ME
+    # from here
+    # https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
     client = Client()
     clients.append(client)
     g = gevent.spawn( read_ws, ws, client )   
     try:
+        ws.send(json.dumps(myWorld.world()))
         while True:
             message = client.get()
             ws.send(message)
@@ -138,6 +146,7 @@ def flask_post_json():
     else:
         return json.loads(request.form.keys()[0])
 
+# the following are from my assignment 4
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
@@ -146,20 +155,19 @@ def update(entity):
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return json.dumps(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return json.dumps(myWorld.get(entity))
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
-
-
+    myWorld.clear()
+    return json.dumps(myWorld.world())
 
 if __name__ == "__main__":
     ''' This doesn't work well anymore:
