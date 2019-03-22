@@ -132,9 +132,12 @@ function addEntity(entity, data) {
     //     },
     //     body: JSON.stringify(data)
     //  });
+    // from here
+    // https://github.com/abramhindle/WebSocketsExamples/blob/master/static/chat.html
     to_send = {}
     to_send[entity] = data
-    socket.send(JSON.stringify(to_send))
+    console.log(to_send)
+    socket.send(JSON.stringify(data))
     //XXX: Send a XHTML Request that updates the entity you just modified!
 }
 var counter = 0;
@@ -275,7 +278,8 @@ function wsSetup() {
         try {
             // debug("WebSocket Recv:" + msg.data);
             //XXX: TODO What are you going to do here?  
-            
+            // here
+            // https://github.com/abramhindle/WebSocketsExamples/blob/master/static/chat.html
             let message = JSON.parse(msg.data)    
             // update world
             for (let entity in message) {
